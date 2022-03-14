@@ -5,7 +5,7 @@ const { transporter } = require("../config/nodemailer")
 
 module.exports = {
     getData: (req, res) => {
-        db.query(`Select * from users;`, (err, results) => {
+        db.query(`Select * from users WHERE users.user_id =${req.query.user_id};`, (err, results) => {
             if (err) {
                 res.status(500).send(err)
             }
@@ -17,7 +17,7 @@ module.exports = {
     register: async (req, res) => {
         try {
             let hashPassword = Crypto.createHmac("sha256", "key_password").update(req.body.password).digest("hex")
-            let insertScript = `INSERT INTO users value (null, '${req.body.username}','${req.body.email}','${hashPassword}','${req.body.no_telepon}','${req.body.user_status}','${req.body.user_role}');`
+            let insertScript = `INSERT INTO users value (null, '${req.body.username}','${req.body.email}','${hashPassword}',${req.body.no_telepon},'Unverified','user');`
 
             let insertSQL = await dbQuery(insertScript);
 
@@ -30,7 +30,7 @@ module.exports = {
                 // konfigurasi email
                 await transporter.sendMail({
                     from: `Admin Wcommerce API`,
-                    to: "lumbantoruan0705@gmail.com",
+                    to: "irfansyahputrahadiyat@gmail.com",
                     subject: "Konfirmasi Register",
                     html: `<div>
                     <h4>Berikut link verifikasi email anda</h4>
@@ -115,6 +115,34 @@ module.exports = {
             let updateSQL = await dbQuery(updateScript);
 
             res.status(200).send({ message: "Account Verified ✅", success: true })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send(error)
+        }
+    },
+    getAddress: async (req, res) => {
+        try {
+            let getAddress = `SELECT * FROM warehouse.address
+            WHERE user_id = ${db.escape(req.dataUser.user_id)};`
+
+            getAddress = await dbQuery(getAddress)
+
+            res.status(200).send(getAddress)
+        } catch (error) {
+            console.log(error)
+            res.status(500).send(error)
+        }
+    },
+    addAddress: async (req, res) => {
+        try {
+            let addAddress = `INSERT INTO address values (null, ${db.escape(req.body.user_id)}, 
+            '${db.escape(req.body.alamat)}', '${db.escape(req.body.kota)}', ${db.escape(req.body.kode_pos)});`
+
+            addAddress = await dbQuery(addAddress)
+
+            if (addAddress.insertId) {
+                res.status(200).send({ message: "Add address success ✅", success: true })
+            }
         } catch (error) {
             console.log(error)
             res.status(500).send(error)

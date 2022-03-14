@@ -24,7 +24,10 @@ app.get('/', (req, res) => {
     res.status(200).send(`<h2>Welcome to Bootcamp </h2>`)
 })
 
-const { usersRouter } = require('./routers')
+const { usersRouter, productsRouter, transactionsRouter } = require('./routers')
+
 app.use("/users", usersRouter)
+app.use("/products", productsRouter)
+app.use("/transactions", transactionsRouter)
 
 app.listen(PORT, () => console.log('Bootcamp Running;', PORT))
