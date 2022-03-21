@@ -62,23 +62,48 @@ module.exports = {
                 console.log(insertProduct)
                 // console.log(req.body)
                 if (insertProduct.insertId) {
-                    let sqlStok = `INSERT INTO stok values (null,${insertProduct.insertId}, ${gudang_id}, ${jumlah_stok}),(null,${insertProduct.insertId}, ${gudang_id}, ${jumlah_stok});`
+                    let sqlStok = `INSERT INTO stok values (null,${insertProduct.insertId}, ${gudang_id}, ${jumlah_stok});`
                     await dbQuery(sqlStok)
                 }
                 res.status(200).send({ message: "Add Product Success ✅" })
-
-                // if (insertProduct.insertId) {
-                //     for (let i = 0; i < gudang_id.length; i++) {
-                //         let sqlStok = `INSERT INTO stok values (null,${insertProduct.insertId}, ${gudang_id[i]}, ${jumlah_stok});`
-                //         await dbQuery(sqlStok)
-                //     }
-                //     res.status(200).send({ message: "Add Product Success ✅" })
-                // }
             } catch (error) {
                 fs.unlinkSync(`./public/images/${req.files.images[0].filename}`)
                 console.log(error);
                 res.status(500).send(error);
             }
         })
+    },
+    searchProduct: async (req, res) => {
+        try {
+            let searchProduct = `SELECT produk.* from produk WHERE nama_produk LIKE "%${req.params.search}%" OR kategori LIKE "%${req.params.search}%";`
+            const search = await dbQuery(searchProduct)
+
+            res.status(200).send(search)
+        } catch (error) {
+            console.log(error)
+            res.status(500).send(error)
+        }
+    },
+    sortProduk: async (req, res) => {
+        try {
+            let sqlsortProduk = `SELECT * FROM produk ORDER BY ${req.params.column} ${req.params.sort};`
+            const sortProduk = await dbQuery(sqlsortProduk)
+
+            res.status(200).send(sortProduk)
+        } catch (error) {
+            console.log(error)
+            res.status(500).send(error)
+        }
     }
+    // sortDescProduk: async (req, res) => {
+    //     try {
+    //         let sortDescProduk = `SELECT * FROM produk ORDER BY nama_produk desc;`
+    //         const descProduk = await dbQuery(sortDescProduk)
+
+    //         res.status(200).send(descProduk)
+    //     } catch (error) {
+    //         console.log(error)
+    //         res.status(500).send(error)
+    //     }
+    // }
 }
