@@ -5,10 +5,12 @@ const fs = require('fs');
 module.exports = {
     getCart: async (req, res) => {
         try {
-            let selectCart = `SELECT cart.*, cart_produk.*, produk.nama_produk, produk.harga_jual,produk.galeri_produk from cart
+            let selectCart = `SELECT cart.*, cart_produk.*, produk.nama_produk, produk.harga_jual,produk.galeri_produk,SUM(stok.jumlah_stok) as stok from cart
             JOIN cart_produk on cart.cart_id = cart_produk.cart_id
             JOIN produk on cart_produk.produk_id = produk.produk_id
-            WHERE user_id = ${db.escape(req.dataUser.user_id)} AND is_checkout = false;`
+            JOIN stok on produk.produk_id = stok.produk_id
+            WHERE user_id = ${db.escape(req.dataUser.user_id)} AND is_checkout = false
+            GROUP BY stok.produk_id;`
 
             selectCart = await dbQuery(selectCart)
 
@@ -78,10 +80,10 @@ module.exports = {
 
     getHistori: async (req, res) => {
         try {
-            let sqlHistory = `SELECT cart.cart_id, cart.user_id,  cart_produk.produk_id, cart.address_id, cart_produk.qty, cart.ongkos_kirim, cart_produk.harga_jual,produk.nama_produk,produk.galeri_produk, status_history.nama_status, status_history.timestamp from cart
+            let sqlHistory = `SELECT cart.cart_id, cart.user_id,  cart_produk.produk_id, cart.address_id, cart_produk.qty, cart.ongkos_kirim, cart_produk.harga_jual,produk.nama_produk,produk.galeri_produk, status_history.nama_status, DATE_FORMAT(status_history.timestamp,"%e %M %Y") AS date from cart
             JOIN cart_produk on cart.cart_id = cart_produk.cart_id
             JOIN produk on cart_produk.produk_id = produk.produk_id
-            JOIN status_history on cart.cart_id = status_history.cart_id;;`
+            JOIN status_history on cart.cart_id = status_history.cart_id;`
 
             sqlHistory = await dbQuery(sqlHistory)
 
@@ -93,8 +95,9 @@ module.exports = {
     },
     getPayment: async (req, res) => {
         try {
-            let sqlPayment = `SELECT cart.ongkos_kirim, cart_produk.qty, cart_produk.harga_jual, SUM(cart_produk.harga_jual * cart_produk.qty) + SUM(cart.ongkos_kirim) AS total_pembayaran from cart
-            JOIN cart_produk on cart.cart_id = cart_produk.cart_id;`
+            let sqlPayment = `SELECT cart.ongkos_kirim,cart.cart_id, cart_produk.qty, cart_produk.harga_jual, SUM(cart_produk.harga_jual * cart_produk.qty) + cart.ongkos_kirim AS total_pembayaran from cart
+            JOIN cart_produk on cart.cart_id = cart_produk.cart_id
+            GROUP BY cart.cart_id;`
             let getPayment = await dbQuery(sqlPayment)
 
             res.status(200).send(getPayment)
@@ -129,6 +132,17 @@ module.exports = {
             let sqlHistori = `INSERT INTO status_history (cart_id,nama_status) values (${cart_id},"Menunggu Pembayaran")`
             await dbQuery(sqlHistori)
             res.status(200).send({ message: "Update success✅", success: true })
+        } catch (error) {
+            console.log(error)
+            res.status(500).send(error)
+        }
+    },
+    updateStatusPembayaran: async (req, res) => {
+        try {
+            let sqlStatusPembayaran = `UPDATE status_history set nama_status="Menunggu Konfirmasi" WHERE cart_id = ${db.escape(req.body.cart_id)}`
+            await dbQuery(sqlStatusPembayaran)
+
+            res.status(200).send({ message: "Update Success ✅", sqlStatusPembayaran })
         } catch (error) {
             console.log(error)
             res.status(500).send(error)

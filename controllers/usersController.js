@@ -224,14 +224,12 @@ module.exports = {
     },
     addAddress: async (req, res) => {
         try {
-            let addAddress = `INSERT INTO address values (null, ${db.escape(req.body.user_id)}, 
-            '${db.escape(req.body.alamat)}', '${db.escape(req.body.kota)}', ${db.escape(req.body.kode_pos)});`
+            let addAddress = `INSERT INTO address (user_id,alamat,kota,kode_pos) values (${db.escape(req.body.user_id)}, 
+            ${db.escape(req.body.alamat)}, ${db.escape(req.body.kota)}, ${db.escape(req.body.kode_pos)});`
 
             addAddress = await dbQuery(addAddress)
 
-            if (addAddress.insertId) {
-                res.status(200).send({ message: "Add address success ✅", success: true })
-            }
+            res.status(200).send({ message: "Add address success ✅", success: true })
         } catch (error) {
             console.log(error)
             res.status(500).send(error)

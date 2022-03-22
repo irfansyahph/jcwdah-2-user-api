@@ -8,6 +8,7 @@ router.post("/add-cart", transactionsController.addCart);
 router.delete('/delete-cart/:cart_id/:produk_id', transactionsController.removeProduk);
 router.patch("/update-cart", transactionsController.updateCart);
 router.patch("/update-checkout", transactionsController.updateCheckout);
+router.patch("/update-status-pembayaran", transactionsController.updateStatusPembayaran);
 router.get("/get-histori", transactionsController.getHistori);
 router.get("/get-payment", transactionsController.getPayment);
 router.post("/add-bukti-pembayaran", transactionsController.addBuktiPembayaran);
